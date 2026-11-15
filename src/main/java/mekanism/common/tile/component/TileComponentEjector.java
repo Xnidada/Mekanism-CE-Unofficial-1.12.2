@@ -461,8 +461,13 @@ public class TileComponentEjector implements ITileComponent, ISpecificContainerT
             return;
         }
         ItemStack stack = slot.getStack();
-        if (!stack.isEmpty() && !slot.extractItem(1, mekanism.api.Action.SIMULATE, mekanism.api.AutomationType.EXTERNAL).isEmpty()) {
-            request.addItem(stack, index);
+        if (!stack.isEmpty()) {
+            // Use the slot's simulated extraction result as the request prediction. Some slots
+            // contain oversized stacks but still cap a single extraction at the item's max stack size.
+            ItemStack extractable = slot.extractItem(stack.getCount(), Action.SIMULATE, AutomationType.EXTERNAL);
+            if (!extractable.isEmpty()) {
+                request.addItem(extractable, index);
+            }
         }
     }
 

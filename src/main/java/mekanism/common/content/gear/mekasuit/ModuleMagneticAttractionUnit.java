@@ -1,5 +1,6 @@
 package mekanism.common.content.gear.mekasuit;
 
+import mekanism.api.IIncrementalEnum;
 import mekanism.api.Pos3D;
 import mekanism.api.annotations.ParametersAreNotNullByDefault;
 import mekanism.api.energy.IEnergyContainer;
@@ -14,6 +15,7 @@ import mekanism.common.MekanismLang;
 import mekanism.common.config.MekanismConfig;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ITextComponent;
 
@@ -27,6 +29,18 @@ public class ModuleMagneticAttractionUnit implements ICustomModule<ModuleMagneti
     @Override
     public void init(IModule<ModuleMagneticAttractionUnit> module, ModuleConfigItemCreator configItemCreator) {
         range = configItemCreator.createConfigItem("range", MekanismLang.MODULE_RANGE, new ModuleEnumData<>(Range.LOW, module.getInstalledCount() + 1));
+    }
+
+    @Override
+    public void changeMode(IModule<ModuleMagneticAttractionUnit> module, EntityPlayer player, ItemStack stack, int shift, boolean displayChangeMessage) {
+        Range currentMode = range.get();
+        Range newMode = currentMode.adjust(shift, value -> value.ordinal() < module.getInstalledCount() + 1);
+        if (currentMode != newMode) {
+            range.set(newMode);
+            if (displayChangeMessage) {
+                module.displayModeChange(player, MekanismLang.MODULE_RANGE.getTranslationKey(), newMode);
+            }
+        }
     }
 
     @Override
@@ -68,7 +82,7 @@ public class ModuleMagneticAttractionUnit implements ICustomModule<ModuleMagneti
         item.motionZ = itemMotion.z;
     }
 
-    public enum Range implements IHasTextComponent {
+    public enum Range implements IHasTextComponent, IIncrementalEnum<Range> {
         OFF(0),
         LOW(1F),
         MED(3F),
@@ -77,6 +91,7 @@ public class ModuleMagneticAttractionUnit implements ICustomModule<ModuleMagneti
 
         private final float range;
         private final ITextComponent label;
+        private static final Range[] MODES = values();
 
         Range(float boost) {
             this.range = boost;
@@ -90,6 +105,11 @@ public class ModuleMagneticAttractionUnit implements ICustomModule<ModuleMagneti
 
         public float getRange() {
             return range;
+        }
+
+        @Override
+        public Range byIndex(int index) {
+            return MODES[Math.floorMod(index, MODES.length)];
         }
     }
 }
