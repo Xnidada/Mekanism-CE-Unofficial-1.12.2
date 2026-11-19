@@ -231,7 +231,7 @@ public final class QIOAutomationContainerState implements ISpecificContainerTrac
         UUID player = container.getPlayerUUID();
         FrequencyManager<QIOFrequency> manager = FrequencyType.QIO.getManager(
                 securityMode == SecurityMode.PUBLIC ? null : player, securityMode);
-        return manager == null ? Collections.emptyList() : manager.getFrequencies();
+        return manager == null ? Collections.emptyList() : manager.getFrequenciesForAccess();
     }
 
     private static boolean matchesReference(QIOFrequency frequency, QIOFrequencyReference reference) {

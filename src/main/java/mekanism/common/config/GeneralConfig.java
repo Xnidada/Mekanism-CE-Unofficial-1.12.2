@@ -257,6 +257,11 @@ public class GeneralConfig extends BaseConfig {
     public final BooleanOption allowProtection = new BooleanOption(this, "AllowProtection", true,
             "Enable the security system for players to prevent others from accessing their machines. Does NOT affect Frequencies.");
 
+    public final BooleanOption allowPublicFrequencies = new BooleanOption(this, "AllowPublicFrequencies", true,
+            "Allow creating or using public Teleporter, Quantum Entangloporter and QIO channels, including portable items. "
+                    + "The server value overrides clients. Existing channel data is retained. Private/trusted channels and the security system are unaffected.")
+            .setRequiresWorldRestart();
+
     public final IntOption portableTeleporterDelay = new IntOption(this, "PortableTeleporterDelay", 0,
             "Delay in ticks before a player is teleported after clicking the Teleport button in the portable teleporter.");
 

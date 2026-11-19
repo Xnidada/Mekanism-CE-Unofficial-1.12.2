@@ -11,6 +11,7 @@ import mekanism.client.gui.element.scroll.GuiTextScrollList;
 import mekanism.client.gui.element.text.BackgroundType;
 import mekanism.client.gui.element.text.GuiTextField;
 import mekanism.common.MekanismLang;
+import mekanism.common.config.MekanismConfig;
 import mekanism.common.frequency.Frequency;
 import mekanism.common.frequency.Frequency.FrequencyIdentity;
 import mekanism.common.frequency.FrequencyManager;
@@ -158,10 +159,15 @@ public abstract class GuiTeleporterBase<CONTAINER extends MekanismContainer> ext
                 modeInitialized = true;
             }
         }
+        boolean allowPublic = MekanismConfig.current().general.allowPublicFrequencies.val();
+        if (!allowPublic && selectedMode == SecurityMode.PUBLIC) {
+            selectedMode = SecurityMode.PRIVATE;
+            scrollList.clearSelection();
+        }
         List<String> text = new ArrayList<>();
         getVisibleFrequencies().forEach(freq -> text.add(getFrequencyListText(freq)));
         scrollList.setText(text);
-        publicButton.active = selectedMode != SecurityMode.PUBLIC;
+        publicButton.active = allowPublic && selectedMode != SecurityMode.PUBLIC;
         privateButton.active = selectedMode != SecurityMode.PRIVATE;
         trustedButton.active = selectedMode != SecurityMode.TRUSTED;
         Frequency selected = getSelectedFrequency();

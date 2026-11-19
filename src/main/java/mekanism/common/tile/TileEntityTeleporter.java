@@ -375,6 +375,9 @@ public class TileEntityTeleporter extends TileEntityElectricBlock implements ICo
 
     @Override
     public Object[] invoke(int method, Object[] arguments) throws NoSuchMethodException {
+        if ((method == 4 || method == 5) && !FrequencyType.TELEPORTER.allowsSecurityMode(SecurityMode.PUBLIC)) {
+            return new Object[]{"Public frequencies are disabled by the server."};
+        }
         switch (method) {
             case 0 -> {
                 return new Object[]{getEnergy()};

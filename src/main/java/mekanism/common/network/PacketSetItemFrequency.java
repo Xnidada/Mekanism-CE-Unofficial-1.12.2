@@ -59,7 +59,7 @@ public class PacketSetItemFrequency implements IMessageHandler<SetItemFrequencyM
     }
 
     private <FREQ extends Frequency> void updateFrequency(EntityPlayer player, ItemStack stack, FrequencyType<FREQ> frequencyType, SetItemFrequencyMessage message) {
-        if (message.identity == null) {
+        if (message.identity == null || (message.set && !frequencyType.allowsSecurityMode(message.identity.securityMode()))) {
             return;
         }
         IFrequencyItem frequencyItem = (IFrequencyItem) stack.getItem();

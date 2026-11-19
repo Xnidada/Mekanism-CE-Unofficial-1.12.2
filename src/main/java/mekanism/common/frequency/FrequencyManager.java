@@ -99,7 +99,9 @@ public class FrequencyManager<FREQ extends Frequency> {
     }
 
     public boolean remove(Object key, UUID ownerUUID) {
-        FREQ freq = getFrequency(key);
+        // Deletion remains available while public frequency access is disabled so owners can
+        // clean up channels without temporarily re-enabling them.
+        FREQ freq = frequencies.get(key);
         if (freq != null && freq.ownerMatches(ownerUUID)) {
             QIOFrequencyReference reference = null;
             if (freq instanceof QIOFrequency qioFrequency) {
@@ -144,6 +146,11 @@ public class FrequencyManager<FREQ extends Frequency> {
     }
 
     public FREQ update(Object source, FREQ freq) {
+        if (!frequencyType.allowsSecurityMode(freq.getSecurity())) {
+            FREQ storedFreq = frequencies.get(freq.getKey());
+            deactivate(storedFreq == null ? freq : storedFreq, source);
+            return null;
+        }
         FREQ storedFreq = frequencies.get(freq.getKey());
         if (storedFreq != null) {
             if (storedFreq.update(source)) {
@@ -156,6 +163,11 @@ public class FrequencyManager<FREQ extends Frequency> {
     }
 
     public FREQ validateAndUpdate(Object source, FREQ freq) {
+        if (!frequencyType.allowsSecurityMode(freq.getSecurity())) {
+            FREQ storedFreq = frequencies.get(freq.getKey());
+            deactivate(storedFreq == null ? freq : storedFreq, source);
+            return null;
+        }
         FREQ storedFreq = frequencies.get(freq.getKey());
         if (storedFreq == null) {
             freq.setValid(true);
@@ -202,12 +214,30 @@ public class FrequencyManager<FREQ extends Frequency> {
         return frequencies.values();
     }
 
+    /**
+     * Returns frequencies that a player may select under the active server policy. The raw
+     * collection remains available to world-save code so disabling public frequencies does not
+     * delete them.
+     */
+    public Collection<FREQ> getFrequenciesForAccess() {
+        return securityMode == SecurityMode.PUBLIC && !frequencyType.allowsSecurityMode(securityMode) ?
+                Collections.emptyList() : getFrequencies();
+    }
+
     @Nullable
     public FREQ getFrequency(Object key) {
+        if (securityMode == SecurityMode.PUBLIC && !frequencyType.allowsSecurityMode(securityMode)) {
+            return null;
+        }
         return frequencies.get(key);
     }
 
+    @Nullable
     public FREQ getOrCreateFrequency(FrequencyIdentity identity, @Nullable UUID ownerUUID) {
+        if (identity == null || !frequencyType.allowsSecurityMode(securityMode) ||
+                !frequencyType.allowsSecurityMode(identity.securityMode())) {
+            return null;
+        }
         FREQ freq = frequencies.get(identity.key());
         if (freq == null) {
             freq = frequencyType.create(identity.key(), ownerUUID, identity.securityMode());
@@ -218,6 +248,9 @@ public class FrequencyManager<FREQ extends Frequency> {
     }
 
     public void addFrequency(FREQ freq) {
+        if (!frequencyType.allowsSecurityMode(freq.getSecurity())) {
+            return;
+        }
         frequencies.put(freq.getKey(), freq);
         markDirty();
     }

@@ -1,6 +1,7 @@
 package mekanism.common.frequency;
 
 import io.netty.buffer.ByteBuf;
+import mekanism.common.config.MekanismConfig;
 import mekanism.common.content.entangloporter.InventoryFrequency;
 import mekanism.common.content.qio.QIOFrequency;
 import mekanism.common.content.teleporter.TeleporterFrequency;
@@ -91,6 +92,15 @@ public class FrequencyType<FREQ extends Frequency> {
 
     public String getName() {
         return name;
+    }
+
+    /**
+     * Public security is used internally by the security frequency itself, so it must remain
+     * available even when public item frequencies are disabled.
+     */
+    public boolean allowsSecurityMode(SecurityMode securityMode) {
+        return (securityMode != null && securityMode != SecurityMode.PUBLIC) || this == SECURITY ||
+                MekanismConfig.current().general.allowPublicFrequencies.val();
     }
 
     public FREQ create(Object key, @Nullable UUID ownerUUID, SecurityMode securityMode) {

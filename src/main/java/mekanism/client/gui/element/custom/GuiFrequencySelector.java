@@ -16,6 +16,7 @@ import mekanism.client.gui.element.window.GuiConfirmationDialog;
 import mekanism.client.gui.element.window.GuiConfirmationDialog.DialogType;
 import mekanism.common.Mekanism;
 import mekanism.common.MekanismLang;
+import mekanism.common.config.MekanismConfig;
 import mekanism.common.frequency.Frequency;
 import mekanism.common.frequency.Frequency.FrequencyIdentity;
 import mekanism.common.frequency.FrequencyManager;
@@ -180,6 +181,12 @@ public class GuiFrequencySelector<FREQ extends Frequency> extends GuiElement {
         if (scrollList == null) {
             return;
         }
+        boolean allowPublic = MekanismConfig.current().general.allowPublicFrequencies.val();
+        if (!allowPublic && selectedMode == SecurityMode.PUBLIC) {
+            selectedMode = SecurityMode.PRIVATE;
+            lastFrequencies = null;
+            scrollList.clearSelection();
+        }
         List<FREQ> frequencies = getVisibleFrequencies();
         if (lastFrequencies != frequencies) {
             lastFrequencies = frequencies;
@@ -190,7 +197,7 @@ public class GuiFrequencySelector<FREQ extends Frequency> extends GuiElement {
             }
             scrollList.setText(text);
         }
-        publicButton.active = selectedMode != SecurityMode.PUBLIC;
+        publicButton.active = allowPublic && selectedMode != SecurityMode.PUBLIC;
         trustedButton.active = selectedMode != SecurityMode.TRUSTED;
         privateButton.active = selectedMode != SecurityMode.PRIVATE;
         FREQ selected = getSelectedFrequency();

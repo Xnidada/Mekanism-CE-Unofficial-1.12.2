@@ -66,6 +66,9 @@ public class FrequencyAware<FREQ extends Frequency> {
     }
 
     public static <FREQ extends Frequency> FrequencyAware<FREQ> create(FrequencyType<FREQ> frequencyType, FrequencyIdentity data, UUID player) {
+        if (data == null || !frequencyType.allowsSecurityMode(data.securityMode())) {
+            return none();
+        }
         FrequencyManager<FREQ> manager;
         FREQ freq = null;
         if (!Objects.equals(data.ownerUUID(), player) && SecurityUtils.isTrusted(data.securityMode(), data.ownerUUID(), player)) {
@@ -81,6 +84,9 @@ public class FrequencyAware<FREQ extends Frequency> {
                 return none();
             }
             freq = manager.getOrCreateFrequency(data, player);
+            if (freq == null) {
+                return none();
+            }
         }
         return new FrequencyAware<>(freq.getIdentity(), freq);
     }

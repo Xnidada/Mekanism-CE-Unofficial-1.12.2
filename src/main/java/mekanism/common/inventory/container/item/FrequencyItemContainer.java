@@ -76,7 +76,7 @@ public abstract class FrequencyItemContainer<FREQ extends Frequency> extends Mek
             track(SyncableFrequencyList.create(frequencyType, this::getTrustedCache, value -> trustedCache = value));
         } else {
             track(SyncableFrequency.create(frequencyType, this::getFrequencyFromStack, this::setFrequency));
-            track(SyncableFrequencyList.create(frequencyType, () -> frequencyType.getManager(null, SecurityMode.PUBLIC).getFrequencies(), value -> publicCache = value));
+            track(SyncableFrequencyList.create(frequencyType, () -> frequencyType.getManager(null, SecurityMode.PUBLIC).getFrequenciesForAccess(), value -> publicCache = value));
             track(SyncableFrequencyList.create(frequencyType, () -> frequencyType.getManager(getPlayerUUID(), SecurityMode.PRIVATE).getFrequencies(), value -> privateCache = value));
             track(SyncableFrequencyList.create(frequencyType, () -> frequencyType.getManager(getPlayerUUID(), SecurityMode.TRUSTED).getFrequencies(), value -> trustedCache = value));
         }

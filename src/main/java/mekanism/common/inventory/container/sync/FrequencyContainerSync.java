@@ -36,7 +36,7 @@ public final class FrequencyContainerSync<FREQ extends Frequency> {
         } else {
             container.track(SyncableFrequency.create(frequencyType, serverFrequency, this::setFrequency));
             container.track(SyncableFrequencyList.create(frequencyType,
-                    () -> frequencyType.getManager(null, SecurityMode.PUBLIC).getFrequencies(), value -> publicCache = value));
+                    () -> frequencyType.getManager(null, SecurityMode.PUBLIC).getFrequenciesForAccess(), value -> publicCache = value));
             container.track(SyncableFrequencyList.create(frequencyType,
                     () -> frequencyType.getManager(container.getPlayerUUID(), SecurityMode.PRIVATE).getFrequencies(), value -> privateCache = value));
             container.track(SyncableFrequencyList.create(frequencyType,

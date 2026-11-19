@@ -12,6 +12,7 @@ import mekanism.client.gui.element.tab.GuiWarningTab;
 import mekanism.client.gui.element.text.BackgroundType;
 import mekanism.client.gui.warning.IWarningTracker;
 import mekanism.common.Mekanism;
+import mekanism.common.config.MekanismConfig;
 import mekanism.common.frequency.Frequency;
 import mekanism.common.frequency.Frequency.FrequencyIdentity;
 import mekanism.common.frequency.FrequencyManager;
@@ -181,10 +182,15 @@ public class GuiQuantumEntangloporter extends GuiConfigurableTile<TileEntityQuan
         if (scrollList == null || tileEntity.getSecurity().getClientOwner() == null) {
             return;
         }
+        boolean allowPublic = MekanismConfig.current().general.allowPublicFrequencies.val();
+        if (!allowPublic && selectedMode == SecurityMode.PUBLIC) {
+            selectedMode = SecurityMode.PRIVATE;
+            scrollList.clearSelection();
+        }
         List<String> text = new ArrayList<>();
         getVisibleFrequencies().forEach(freq -> text.add(selectedMode == SecurityMode.PRIVATE ? freq.name : freq.name + " (" + freq.clientOwner + ")"));
         scrollList.setText(text);
-        publicButton.active = selectedMode != SecurityMode.PUBLIC;
+        publicButton.active = allowPublic && selectedMode != SecurityMode.PUBLIC;
         privateButton.active = selectedMode != SecurityMode.PRIVATE;
         trustedButton.active = selectedMode != SecurityMode.TRUSTED;
         Frequency selected = getSelectedFrequency();

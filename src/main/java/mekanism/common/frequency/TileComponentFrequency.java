@@ -73,7 +73,8 @@ public class TileComponentFrequency implements ITileComponent {
     @SuppressWarnings("unchecked")
     public <FREQ extends Frequency> FREQ getFrequency(FrequencyType<FREQ> type) {
         FrequencyData data = getFrequencyData(type);
-        return data == null ? null : (FREQ) data.frequency;
+        return data == null || data.frequency == null || !type.allowsSecurityMode(data.frequency.getSecurity()) ?
+                null : (FREQ) data.frequency;
     }
 
     @Nullable
@@ -114,6 +115,9 @@ public class TileComponentFrequency implements ITileComponent {
     }
 
     private <FREQ extends Frequency> void setFrequencyFromData(FrequencyType<FREQ> type, FrequencyIdentity identity, UUID player, FrequencyData data) {
+        if (!type.allowsSecurityMode(identity.securityMode())) {
+            return;
+        }
         FREQ oldFrequency = getFrequency(type);
         FREQ frequency = null;
         FrequencyManager<FREQ> manager;
@@ -130,6 +134,9 @@ public class TileComponentFrequency implements ITileComponent {
                 return;
             }
             frequency = manager.getOrCreateFrequency(identity, player);
+            if (frequency == null) {
+                return;
+            }
         } else {
             manager = type.getFrequencyManager(frequency);
             if (manager == null) {
@@ -202,7 +209,7 @@ public class TileComponentFrequency implements ITileComponent {
             return;
         }
         FREQ frequency = (FREQ) data.frequency;
-        if (frequency.isRemoved()) {
+        if (frequency.isRemoved() || !type.allowsSecurityMode(frequency.getSecurity())) {
             deactivate(type, data);
             data.frequency = null;
             setNeedsNotify(data);
@@ -344,15 +351,18 @@ public class TileComponentFrequency implements ITileComponent {
     @Override
     public void write(TileNetworkList data) {
         if (securityFrequency != null) {
-            writeFrequency(data, securityFrequency);
+            writeFrequency(data, FrequencyType.SECURITY, securityFrequency);
         }
         for (Map.Entry<FrequencyType<?>, FrequencyData> entry : nonSecurityFrequencies.entrySet()) {
-            writeFrequency(data, entry.getValue());
+            writeFrequency(data, entry.getKey(), entry.getValue());
         }
     }
 
-    private void writeFrequency(TileNetworkList data, FrequencyData frequencyData) {
+    private void writeFrequency(TileNetworkList data, FrequencyType<?> type, FrequencyData frequencyData) {
         Frequency frequency = frequencyData.frequency;
+        if (type != FrequencyType.SECURITY && frequency != null && !type.allowsSecurityMode(frequency.getSecurity())) {
+            frequency = null;
+        }
         if (frequency != null) {
             data.add(true);
             frequency.write(data);
@@ -387,7 +397,7 @@ public class TileComponentFrequency implements ITileComponent {
     private void trackFrequencyForMainContainer(MekanismContainer container, FrequencyType<?> key, FrequencyData data) {
         FrequencyType<Frequency> type = (FrequencyType<Frequency>) key;
         if (data.needsSync) {
-            container.track(SyncableFrequency.create(type, () -> data.frequency, frequency -> data.frequency = frequency));
+            container.track(SyncableFrequency.create(type, () -> getFrequency(type), frequency -> data.frequency = frequency));
         }
         if (data.needsListCache) {
             Consumer<List<Frequency>> publicSetter = getSetter(SecurityMode.PUBLIC, type);
@@ -398,7 +408,7 @@ public class TileComponentFrequency implements ITileComponent {
                 container.track(SyncableFrequencyList.create(type, () -> getPrivateCache(type), privateSetter));
                 container.track(SyncableFrequencyList.create(type, () -> getTrustedCache(type), trustedSetter));
             } else {
-                container.track(SyncableFrequencyList.create(type, () -> type.getManager(null, SecurityMode.PUBLIC).getFrequencies(),
+                container.track(SyncableFrequencyList.create(type, () -> type.getManager(null, SecurityMode.PUBLIC).getFrequenciesForAccess(),
                         publicSetter));
                 container.track(SyncableFrequencyList.create(type, () -> type.getManager(container.getPlayerUUID(), SecurityMode.PRIVATE).getFrequencies(),
                         privateSetter));

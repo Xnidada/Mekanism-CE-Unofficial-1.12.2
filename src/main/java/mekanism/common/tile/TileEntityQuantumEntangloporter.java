@@ -440,6 +440,9 @@ public class TileEntityQuantumEntangloporter extends TileEntityElectricBlock imp
 
     @Override
     public Object[] invoke(int method, Object[] arguments) throws NoSuchMethodException {
+        if ((method == 0 || method == 1) && !FrequencyType.INVENTORY.allowsSecurityMode(SecurityMode.PUBLIC)) {
+            return new Object[]{"Public frequencies are disabled by the server."};
+        }
         if (method == 0) {
             if (!(arguments[0] instanceof String)) {
                 return new Object[]{"Invalid parameters."};
