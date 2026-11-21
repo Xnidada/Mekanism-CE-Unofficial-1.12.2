@@ -160,7 +160,7 @@ public class ItemMekaTool extends ItemEnergized implements IModuleContainerItem,
     @Override
     public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
         for (Module<?> module : getModules(player.getHeldItem(hand))) {
-            if (module != null && module.isEnabled() && !MekanismConfig.current().meka.mekaToolTeleportationDisabledDimensions.val().contains(world.provider.getDimension())) {
+            if (module != null && module.isEnabled()) {
                 EnumActionResult result = onModuleUse(module, player, world, pos, hand, side, hitX, hitY, hitZ);
                 if (result != EnumActionResult.PASS) {
                     return result;
@@ -416,13 +416,13 @@ public class ItemMekaTool extends ItemEnergized implements IModuleContainerItem,
         ItemStack stack = player.getHeldItem(hand);
         if (!world.isRemote) {
             IModule<ModuleTeleportationUnit> module = getModule(stack, MekanismModules.TELEPORTATION_UNIT);
-            if (module != null && module.isEnabled()) {
+            if (module != null && module.isEnabled() && !MekanismConfig.current().meka.mekaToolTeleportationDisabledDimensions.val().contains(world.provider.getDimension())) {
                 RayTraceResult result = MekanismUtils.rayTrace(world, player, MekanismConfig.current().meka.mekaToolMaxTeleportReach.val());
                 //If we don't require a block target or are not a miss, allow teleporting
-                if (!module.getCustomInstance().requiresBlockTarget() || result.typeOfHit != RayTraceResult.Type.MISS) {
+                if (result != null && (!module.getCustomInstance().requiresBlockTarget() || result.typeOfHit != RayTraceResult.Type.MISS)) {
                     BlockPos pos = result.getBlockPos();
                     // make sure we fit
-                    if (isValidDestinationBlock(world, pos.up()) && isValidDestinationBlock(world, pos.up(2))) {
+                    if (pos != null && isValidDestinationBlock(world, pos.up()) && isValidDestinationBlock(world, pos.up(2))) {
                         double distance = player.getDistanceSq(pos.getX(), pos.getY(), pos.getZ());
                         if (distance < 5) {
                             return new ActionResult<>(EnumActionResult.PASS, stack);
