@@ -418,8 +418,8 @@ public class ItemMekaTool extends ItemEnergized implements IModuleContainerItem,
             IModule<ModuleTeleportationUnit> module = getModule(stack, MekanismModules.TELEPORTATION_UNIT);
             if (module != null && module.isEnabled()) {
                 RayTraceResult result = MekanismUtils.rayTrace(world, player, MekanismConfig.current().meka.mekaToolMaxTeleportReach.val());
-                //Teleportation must always target a block that the player can see and click.
-                if (result.typeOfHit == RayTraceResult.Type.BLOCK) {
+                //If we don't require a block target or are not a miss, allow teleporting
+                if (!module.getCustomInstance().requiresBlockTarget() || result.typeOfHit != RayTraceResult.Type.MISS) {
                     BlockPos pos = result.getBlockPos();
                     // make sure we fit
                     if (isValidDestinationBlock(world, pos.up()) && isValidDestinationBlock(world, pos.up(2))) {
