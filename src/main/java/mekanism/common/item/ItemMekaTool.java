@@ -160,7 +160,7 @@ public class ItemMekaTool extends ItemEnergized implements IModuleContainerItem,
     @Override
     public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
         for (Module<?> module : getModules(player.getHeldItem(hand))) {
-            if (module != null && module.isEnabled()) {
+            if (module != null && module.isEnabled() && !MekanismConfig.current().meka.mekaToolTeleportationDisabledDimensions.val().contains(world.provider.getDimension())) {
                 EnumActionResult result = onModuleUse(module, player, world, pos, hand, side, hitX, hitY, hitZ);
                 if (result != EnumActionResult.PASS) {
                     return result;
